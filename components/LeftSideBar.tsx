@@ -1,24 +1,29 @@
 "use client";
 
 import {useEffect, useState} from 'react';
-import {Search, Plus, MessageSquare, Zap, Wand2, Trash2,X} from 'lucide-react';
+import {Search, Plus, MessageSquare, Zap, Trash2, X, Wand2} from 'lucide-react';
 
 import {useAtom} from "jotai";
 import {ChatBannerType} from "@/Types/ChatBannerType";
-import {ChatBannerAtom} from "@/Store/ChatBannerStore";
+import {ActiveChatAtom, ChatBannerAtom} from "@/Store/ChatBannerStore";
+import {ChatStore} from "@/Store/ChatsStore";
 
 const LeftSideBar = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [chats, setChats] = useAtom<ChatBannerType[]>(ChatBannerAtom);
-    const [activeChat, setActiveChat] = useState(1);
+    const [activeChat, setActiveChat] = useAtom(ActiveChatAtom);
+    const [Chats] = useAtom(ChatStore);
 
     useEffect(() => {
         const saved = localStorage.getItem("chats");
         setChats(saved ? JSON.parse(saved) : []);
     },[]);
 
+
+
     useEffect(() => {
         localStorage.setItem("chats", JSON.stringify(chats));
+        localStorage.setItem("AllChats", JSON.stringify(Chats));
     }, [chats]);
 
     const filteredChats = chats.filter(chat =>
@@ -27,7 +32,7 @@ const LeftSideBar = () => {
 
     const ProxiIcon = () => (
         <div
-            className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+            className="flex items-center justify-center w-8 h-8 p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
             <Wand2 className="w-5 h-5 text-white"/>
         </div>
     );
@@ -38,18 +43,18 @@ const LeftSideBar = () => {
             title: `New Chat`,
         };
 
-        setChats((prevChats) => [newChat, ...prevChats]);
+        setActiveChat(newChat.id);
+        setChats((prevChats) => [...prevChats,newChat]);
     }
 
     return (
-        <div className="flex h-screen bg-zinc-950 text-zinc-100">
+        <div className="flex h-screen w-80 bg-zinc-950 text-zinc-100">
             {/* Sidebar */}
             <div className="w-80 border-r border-zinc-800 flex flex-col bg-zinc-950">
                 {/* Header */}
                 <div className="p-4 border-b border-zinc-800">
                     <div className="flex items-center gap-3">
-                        <ProxiIcon/>
-                        <h1 className="text-3xl font-semibold text-zinc-100">
+                        <h1 className="text-3xl font-light tracking-wide text-zinc-100">
                             ProxiAI
                         </h1>
                     </div>
@@ -70,7 +75,7 @@ const LeftSideBar = () => {
                             />
                         </div>
                         <button onClick={() => handleAddButton()}
-                                className="flex items-center justify-center w-10 h-10 bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-700 rounded-lg transition-all duration-200 group">
+                                className="flex cursor-pointer items-center justify-center w-10 h-10 bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-700 rounded-lg transition-all duration-200 group">
                             <Plus className="w-4 h-4 text-zinc-400 group-hover:text-zinc-100"/>
                         </button>
                     </div>
@@ -78,7 +83,7 @@ const LeftSideBar = () => {
 
                 {/* Chat List */}
                 <div className="flex-1 overflow-y-auto px-3 pb-4">
-                    <div className="space-y-1">
+                    <div className="flex flex-col-reverse">
                         {filteredChats.map((chat) => (
                             <button
                                 key={chat.id}
@@ -123,6 +128,7 @@ const LeftSideBar = () => {
                                         setChats((prevChats) =>
                                             prevChats.filter((c) => c.id !== chat.id)
                                         );
+                                        localStorage.setItem("AllChats", JSON.stringify(Chats));
                                     }}
                                     className="w-4 h-4 text-zinc-500 hover:text-red-500 cursor-pointer"
                                 />
@@ -144,6 +150,8 @@ const LeftSideBar = () => {
                         onClick={() => {
                             setChats([]);
                             localStorage.setItem("chats", JSON.stringify(chats));
+                            localStorage.setItem("AllChats", JSON.stringify(Chats));
+                            setActiveChat(-1);
                         }}
                         className="w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200 group">
                         <Trash2 className="w-4 h-4"/>
